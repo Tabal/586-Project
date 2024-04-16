@@ -13,8 +13,9 @@ app.controller('statsCtrl', function($scope){
        data = JSON.parse(json);
        var a = parseInt(data.a || 0);
        var b = parseInt(data.b || 0);
+       var c = parseInt(data.c || 0);
 
-       var percentages = getPercentages(a, b);
+       var percentages = getPercentages(a, b, c);
 
        bg1.style.width = percentages.a + "%";
        bg2.style.width = percentages.b + "%";
@@ -36,10 +37,10 @@ app.controller('statsCtrl', function($scope){
   });
 });
 
-function getPercentages(a, b) {
+function getPercentages(a, b, c) {
   var result = {};
 
-  if (a + b > 0) {
+  if (a + b + c> 0) {
     result.a = Math.round(a / (a + b) * 100);
     result.b = 100 - result.a;
   } else {
