@@ -45,12 +45,16 @@ services:
       - back-tier
 
   db:
-    image: postgres:9.4
+    image: mcr.microsoft.com/mssql/server:2019-latest
     environment:
-      POSTGRES_USER: "postgres"
-      POSTGRES_PASSWORD: "postgres"
+      SA_PASSWORD: "YourStrong@Password"
+      ACCEPT_EULA: "Y"
     volumes:
-      - "db-data:/var/lib/postgresql/data"
+      - "db-data:/var/opt/mssql"
+      - "./healthchecks:/healthchecks"
+    healthcheck:
+      test: /healthchecks/sqlserver.sh
+      interval: "5s"
     networks:
       - back-tier
 

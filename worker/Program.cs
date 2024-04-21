@@ -1,11 +1,11 @@
 using System;
 using System.Data.Common;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using Newtonsoft.Json;
-using Npgsql;
 using StackExchange.Redis;
 
 namespace Worker
@@ -16,13 +16,11 @@ namespace Worker
         {
             try
             {
-                var pgsql = OpenDbConnection("Server=db;Password=YourStrong@Password;");
+                var sqlConn = OpenDbConnection("Server=localhost,1433;Database=Master;User Id=sa;Password=YourStrong@Password;");
                 var redisConn = OpenRedisConnection("redis");
                 var redis = redisConn.GetDatabase();
 
-                // Keep alive is not implemented in Npgsql yet. This workaround was recommended:
-                // https://github.com/npgsql/npgsql/issues/1214#issuecomment-235828359
-                var keepAliveCommand = pgsql.CreateCommand();
+                var keepAliveCommand = sqlConn.CreateCommand();
                 keepAliveCommand.CommandText = "SELECT 1";
 
                 var definition = new { vote = "", voter_id = "" };
@@ -43,14 +41,14 @@ namespace Worker
                         var vote = JsonConvert.DeserializeAnonymousType(json, definition);
                         Console.WriteLine($"Processing vote for '{vote.vote}' by '{vote.voter_id}'");
                         // Reconnect DB if down
-                        if (!pgsql.State.Equals(System.Data.ConnectionState.Open))
+                        if (!sqlConn.State.Equals(System.Data.ConnectionState.Open))
                         {
                             Console.WriteLine("Reconnecting DB");
-                            pgsql = OpenDbConnection("Server=db;Password=YourStrong@Password;");
+                            sqlConn = OpenDbConnection("Server=localhost,1433;Database=Master;User Id=sa;Password=YourStrong@Password;");
                         }
                         else
                         { // Normal +1 vote requested
-                            UpdateVote(pgsql, vote.voter_id, vote.vote);
+                            UpdateVote(sqlConn, vote.voter_id, vote.vote);
                         }
                     }
                     else
@@ -66,26 +64,26 @@ namespace Worker
             }
         }
 
-        private static NpgsqlConnection OpenDbConnection(string connectionString)
+        private static SqlConnection OpenDbConnection(string connectionString)
         {
-            NpgsqlConnection connection;
+            SqlConnection connection;
 
             while (true)
             {
                 try
                 {
-                    connection = new NpgsqlConnection(connectionString);
+                    connection = new SqlConnection(connectionString);
                     connection.Open();
                     break;
                 }
                 catch (SocketException)
                 {
-                    Console.Error.WriteLine("Waiting for db");
+                    Console.Error.WriteLine("Waiting for db --Socket Ex");
                     Thread.Sleep(1000);
                 }
                 catch (DbException)
                 {
-                    Console.Error.WriteLine("Waiting for db");
+                    Console.Error.WriteLine("Waiting for db --DB Ex");
                     Thread.Sleep(1000);
                 }
             }
@@ -130,7 +128,7 @@ namespace Worker
                 .First(a => a.AddressFamily == AddressFamily.InterNetwork)
                 .ToString();
 
-        private static void UpdateVote(NpgsqlConnection connection, string voterId, string vote)
+        private static void UpdateVote(SqlConnection connection, string voterId, string vote)
         {
             var command = connection.CreateCommand();
             try

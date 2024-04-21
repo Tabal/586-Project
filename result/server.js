@@ -1,6 +1,6 @@
 var express = require('express'),
     async = require('async'),
-    { Pool } = require('pg'),
+    sql = require('mssql'), //mssql replaces Pool which was used for pgsql.
     cookieParser = require('cookie-parser'),
     app = express(),
     server = require('http').Server(app),
@@ -17,14 +17,21 @@ io.on('connection', function (socket) {
   });
 });
 
-var pool = new Pool({
-  connectionString: 'postgres://postgres:postgres@db/postgres'
-});
+//Create the config for the SQL Server connection
+var config = {
+  user:'sa',
+  password:'YourStrong@Password',
+  server:'localhost',
+  database:'Master',
+  port:1433,
+}
 
 async.retry(
   {times: 1000, interval: 1000},
   function(callback) {
-    pool.connect(function(err, client, done) {
+    //Drop the done from our callback function arg
+    //Also pass in the config
+    sql.connect(config, (err, client) => {
       if (err) {
         console.error("Waiting for db");
       }
@@ -41,7 +48,7 @@ async.retry(
 );
 
 function getVotes(client) {
-  client.query('SELECT vote, COUNT(id) AS count FROM votes GROUP BY vote', [], function(err, result) {
+  sql.query('SELECT vote, COUNT(id) AS count FROM votes GROUP BY vote', [], (err, result) => {
     if (err) {
       console.error("Error performing query: " + err);
     } else {
@@ -54,7 +61,7 @@ function getVotes(client) {
 }
 
 function collectVotesFromResult(result) {
-  var votes = {a: 0, b: 0};
+  var votes = {a: 0, b: 0, c: 0};
 
   result.rows.forEach(function (row) {
     votes[row.vote] = parseInt(row.count);
@@ -69,6 +76,11 @@ app.use(express.static(__dirname + '/views'));
 
 app.get('/', function (req, res) {
   res.sendFile(path.resolve(__dirname + '/views/index.html'));
+});
+
+//Handle errors during connections
+sql.on('error', err => {
+  console.error('SQL Server error:',err);
 });
 
 server.listen(port, function () {

@@ -3,10 +3,12 @@ var socket = io.connect();
 
 var bg1 = document.getElementById('background-stats-1');
 var bg2 = document.getElementById('background-stats-2');
+var bg3 = document.getElementById('background-stats-3');
 
 app.controller('statsCtrl', function($scope){
-  $scope.aPercent = 50;
-  $scope.bPercent = 50;
+  $scope.aPercent = 100/3.0;
+  $scope.bPercent = 100/3.0;
+  $scope.cPercent = 100/3.0;
 
   var updateScores = function(){
     socket.on('scores', function (json) {
@@ -19,11 +21,13 @@ app.controller('statsCtrl', function($scope){
 
        bg1.style.width = percentages.a + "%";
        bg2.style.width = percentages.b + "%";
+       bg3.style.width = percentages.c + "%";
 
        $scope.$apply(function () {
          $scope.aPercent = percentages.a;
          $scope.bPercent = percentages.b;
-         $scope.total = a + b;
+         $scope.cPercent = percentages.c;
+         $scope.total = a + b + c;
        });
     });
   };
@@ -41,10 +45,11 @@ function getPercentages(a, b, c) {
   var result = {};
 
   if (a + b + c> 0) {
-    result.a = Math.round(a / (a + b) * 100);
-    result.b = 100 - result.a;
+    result.a = Math.round(a / (a + b + c) * 100);
+    result.b = Math.round(b / (a + b + c) * 100);
+    result.c = 100 - result.a - result.b;
   } else {
-    result.a = result.b = 50;
+    result.a = result.b = result.c = (100/3.0);
   }
 
   return result;

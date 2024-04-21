@@ -66,6 +66,8 @@ services:
     environment:
       SA_PASSWORD: "YourStrong@Password"
       ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
     volumes:
       - "db-data:/var/opt/mssql"
       - "./healthchecks:/healthchecks"

@@ -2,19 +2,18 @@
 <html ng-app="catsvsdogs">
   <head>
     <meta charset="utf-8">
-    <title>Cats vs Dogs -- Result</title>
+    <title>Cats vs Dogs vs Gold Fish-- Result</title>
     <base href="/index.html">
     <meta name = "viewport" content = "width=device-width, initial-scale = 1.0">
     <meta name="keywords" content="docker-compose, docker, stack">
     <meta name="author" content="Docker">
     <link rel='stylesheet' href='/stylesheets/style.css' />
   </head>
-  <body ng-controller="statsCtrl" >
-     <div id="background-stats">
-       <div id="background-stats-1">
-       </div><!--
-      --><div id="background-stats-2">
-      </div>
+  <body ng-controller="statsCtrl">
+    <div id="background-stats">
+      <div id="background-stats-1" style="--votes-1: {{aPercent/100}};"></div>
+      <div id="background-stats-2" style="--votes-2: {{bPercent/100}};"></div>
+      <div id="background-stats-3" style="--votes-3: {{cPercent/100}};"></div>
     </div>
     <div id="content-container">
       <div id="content-container-center">
@@ -27,6 +26,11 @@
           <div class="choice dogs">
             <div class="label">Dogs</div>
             <div class="stat">{{bPercent | number:1}}%</div>
+          </div>
+          <div class="divider"></div>
+          <div class="choice fish">
+            <div class="label">Gold Fish</div>
+            <div class="stat">{{cPercent | number:1}}%</div>
           </div>
         </div>
       </div>
