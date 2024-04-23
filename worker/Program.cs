@@ -7,18 +7,22 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Mvc;
 using StackExchange.Redis;
 
 namespace Worker
 {
-    public class Program
+    [ApiController]
+    [Route("")]
+    public class Program : ControllerBase
+
     {
+
+        public static SqlConnection sqlConn = OpenDbConnection("Data Source=db,1433;Initial Catalog=master;User ID=sa;Password=YourStrong@Password;Encrypt=false");
         public static int Main(string[] args)
         {
             try
             {
-                //
-                var sqlConn = OpenDbConnection("Data Source=db,1433;Initial Catalog=master;User ID=sa;Password=YourStrong@Password;Encrypt=false");
                 var redisConn = OpenRedisConnection("redis");
                 var redis = redisConn.GetDatabase();
 
@@ -47,10 +51,6 @@ namespace Worker
                         {
                             Console.WriteLine("Reconnecting DB");
                             sqlConn = OpenDbConnection("Data Source=db,1433;Initial Catalog=master;User Id=sa;Password=YourStrong@Password;Encrypt=false");
-                        }
-                        else
-                        { // Normal +1 vote requested
-                            UpdateVote(sqlConn, vote.voter_id, vote.vote);
                         }
                     }
                     else
@@ -128,25 +128,38 @@ namespace Worker
                 .First(a => a.AddressFamily == AddressFamily.InterNetwork)
                 .ToString();
 
-        private static void UpdateVote(SqlConnection connection, string voterId, string vote)
+
+        [HttpPost("updateVote")]
+        public IActionResult UpdateVote([FromBody] Voter voter)
         {
-            var command = connection.CreateCommand();
+            var command = sqlConn.CreateCommand();
             try
             {
                 command.CommandText = "INSERT INTO votes (id, vote) VALUES (@id, @vote)";
-                command.Parameters.AddWithValue("@id", voterId);
-                command.Parameters.AddWithValue("@vote", vote);
+                command.Parameters.AddWithValue("@id", voter.voterId);
+                command.Parameters.AddWithValue("@vote", voter.vote);
                 command.ExecuteNonQuery();
+
+                return Ok();
             }
             catch (DbException)
             {
                 command.CommandText = "UPDATE votes SET vote = @vote WHERE id = @id";
                 command.ExecuteNonQuery();
+
+                return Ok();
             }
             finally
             {
                 command.Dispose();
             }
-        }
+       
+        } 
+    }
+
+    public class Voter
+    {
+        public string voterId;
+        public string vote;
     }
 }

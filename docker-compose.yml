@@ -48,6 +48,8 @@ services:
         condition: service_healthy 
       db:
         condition: service_healthy 
+    ports:
+        - "5002:80"
     networks:
       - back-tier
 
