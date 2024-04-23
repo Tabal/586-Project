@@ -1,6 +1,7 @@
 using System;
+using System.Data;
 using System.Data.Common;
-using System.Data.SqlClient;
+using System.Data.SqlClient; //This is used 
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
@@ -16,7 +17,8 @@ namespace Worker
         {
             try
             {
-                var sqlConn = OpenDbConnection("Server=localhost,1433;Database=Master;User Id=sa;Password=YourStrong@Password;");
+                //
+                var sqlConn = OpenDbConnection("Data Source=db,1433;Initial Catalog=master;User ID=sa;Password=YourStrong@Password;Encrypt=false");
                 var redisConn = OpenRedisConnection("redis");
                 var redis = redisConn.GetDatabase();
 
@@ -44,7 +46,7 @@ namespace Worker
                         if (!sqlConn.State.Equals(System.Data.ConnectionState.Open))
                         {
                             Console.WriteLine("Reconnecting DB");
-                            sqlConn = OpenDbConnection("Server=localhost,1433;Database=Master;User Id=sa;Password=YourStrong@Password;");
+                            sqlConn = OpenDbConnection("Data Source=db,1433;Initial Catalog=master;User Id=sa;Password=YourStrong@Password;Encrypt=false");
                         }
                         else
                         { // Normal +1 vote requested
@@ -81,20 +83,18 @@ namespace Worker
                     Console.Error.WriteLine("Waiting for db --Socket Ex");
                     Thread.Sleep(1000);
                 }
-                catch (DbException)
+                catch (DbException ex)
                 {
-                    Console.Error.WriteLine("Waiting for db --DB Ex");
+                    Console.Error.WriteLine("Waiting for DB --DB Ex" + ex);
                     Thread.Sleep(1000);
                 }
             }
 
             Console.Error.WriteLine("Connected to db");
 
-            var command = connection.CreateCommand();
-            command.CommandText = @"CREATE TABLE IF NOT EXISTS votes (
-                                        id VARCHAR(255) NOT NULL UNIQUE,
-                                        vote VARCHAR(255) NOT NULL
-                                    )";
+            var command = new SqlCommand("createVotesTable", connection);
+            command.CommandType = CommandType.StoredProcedure;
+
             command.ExecuteNonQuery();
 
             return connection;
