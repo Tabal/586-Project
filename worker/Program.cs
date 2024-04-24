@@ -1,5 +1,4 @@
 using System;
-using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient; //This is used 
 using System.Linq;
@@ -13,7 +12,7 @@ using StackExchange.Redis;
 namespace Worker
 {
     [ApiController]
-    [Route("")]
+    [Route("api")]
     public class Program : ControllerBase
 
     {
@@ -92,12 +91,25 @@ namespace Worker
 
             Console.Error.WriteLine("Connected to db");
 
-            var command = new SqlCommand("createVotesTable", connection);
-            command.CommandType = CommandType.StoredProcedure;
+            string createTableQuery = @"
+                        CREATE TABLE votes (
+                            id NVARCHAR(255) NOT NULL PRIMARY KEY,
+                            vote NVARCHAR(255) NOT NULL
+                        )";
 
-            command.ExecuteNonQuery();
+            //var command = new SqlCommand("createVotesTable", connection);
+            var command = new SqlCommand(createTableQuery, connection);
+            //command.CommandType = CommandType.StoredProcedure;
 
+            try
+            {
+                command.ExecuteNonQuery();
+            } catch
+            {
+                //Do nothing
+            }
             return connection;
+            
         }
 
         private static ConnectionMultiplexer OpenRedisConnection(string hostname)
@@ -128,9 +140,9 @@ namespace Worker
                 .First(a => a.AddressFamily == AddressFamily.InterNetwork)
                 .ToString();
 
-
-        [HttpPost("updateVote")]
-        public IActionResult UpdateVote([FromBody] Voter voter)
+        [HttpPost]
+        [Route("UpdateVote")]
+        public ActionResult UpdateVote([FromBody] Voter voter)
         {
             var command = sqlConn.CreateCommand();
             try
