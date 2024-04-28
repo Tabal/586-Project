@@ -7,9 +7,6 @@ services:
     build: 
       context: ./vote
       target: dev
-    depends_on:
-      redis:
-        condition: service_healthy
     healthcheck: 
       test: ["CMD", "curl", "-f", "http://localhost"]
       interval: 15s
@@ -28,9 +25,6 @@ services:
     build: ./result
     # use nodemon rather than node for local dev
     entrypoint: nodemon --inspect=0.0.0.0 server.js
-    depends_on:
-      db:
-        condition: service_healthy 
     volumes:
       - ./result:/usr/local/app
     ports:
@@ -43,11 +37,6 @@ services:
   worker:
     build:
       context: ./worker
-    depends_on:
-      redis:
-        condition: service_healthy 
-      db:
-        condition: service_healthy 
     ports:
         - "5002:80"
     networks:
