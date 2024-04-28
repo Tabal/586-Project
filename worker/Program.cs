@@ -16,12 +16,11 @@ namespace Worker
     public class Program : ControllerBase
 
     {
-
-        public static SqlConnection sqlConn = OpenDbConnection("Data Source=db,1433;Initial Catalog=master;User ID=sa;Password=YourStrong@Password;Encrypt=false");
         public static int Main(string[] args)
         {
             try
             {
+                var sqlConn = OpenDbConnection("Data Source=db,1433;Initial Catalog=master;User ID=sa;Password=YourStrong@Password;Encrypt=false");
                 var redisConn = OpenRedisConnection("redis");
                 var redis = redisConn.GetDatabase();
 
@@ -50,6 +49,11 @@ namespace Worker
                         {
                             Console.WriteLine("Reconnecting DB");
                             sqlConn = OpenDbConnection("Data Source=db,1433;Initial Catalog=master;User Id=sa;Password=YourStrong@Password;Encrypt=false");
+                        }
+                        else
+                        { // Normal +1 vote requested
+                            UpdateVote(sqlConn, vote.voter_id, vote.vote);
+
                         }
                     }
                     else
@@ -114,6 +118,7 @@ namespace Worker
 
         private static ConnectionMultiplexer OpenRedisConnection(string hostname)
         {
+
             // Use IP address to workaround https://github.com/StackExchange/StackExchange.Redis/issues/410
             var ipAddress = GetIp(hostname);
             Console.WriteLine($"Found redis at {ipAddress}");
@@ -140,26 +145,23 @@ namespace Worker
                 .First(a => a.AddressFamily == AddressFamily.InterNetwork)
                 .ToString();
 
-        [HttpPost]
-        [Route("UpdateVote")]
-        public ActionResult UpdateVote([FromBody] Voter voter)
+        public static void UpdateVote(SqlConnection sqlConn, string voterId, string vote)
         {
             var command = sqlConn.CreateCommand();
             try
             {
+                Console.Error.WriteLine("Adding a vote...");
                 command.CommandText = "INSERT INTO votes (id, vote) VALUES (@id, @vote)";
-                command.Parameters.AddWithValue("@id", voter.voterId);
-                command.Parameters.AddWithValue("@vote", voter.vote);
+                command.Parameters.AddWithValue("@id", voterId);
+                command.Parameters.AddWithValue("@vote", vote);
                 command.ExecuteNonQuery();
-
-                return Ok();
             }
             catch (DbException)
             {
+                Console.Error.WriteLine("Updating a vote instead...");
                 command.CommandText = "UPDATE votes SET vote = @vote WHERE id = @id";
                 command.ExecuteNonQuery();
-
-                return Ok();
+                Console.Error.WriteLine("Vote has been updated!");
             }
             finally
             {
