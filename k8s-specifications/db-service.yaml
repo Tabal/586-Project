@@ -9,7 +9,7 @@ spec:
   ports:
   - name: "db-service"
     port: 5432
-    targetPort: 5432
+    targetPort: 1433
   selector:
     app: db
   

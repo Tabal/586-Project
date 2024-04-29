@@ -15,19 +15,19 @@ spec:
         app: db
     spec:
       containers:
-      - image: postgres:15-alpine
-        name: postgres
+      - image: mcr.microsoft.com/mssql/server:2019-latest
+        name: sql-server
         env:
-        - name: POSTGRES_USER
-          value: postgres
-        - name: POSTGRES_PASSWORD
-          value: postgres
+        - name: SA_PASSWORD
+          value: "YourStrong@Password"
+        - name: ACCEPT_EULA
+          value: "Y"
         ports:
-        - containerPort: 5432
-          name: postgres
+        - containerPort: 1433
+          name: sql-server
         volumeMounts:
-        - mountPath: /var/lib/postgresql/data
+        - mountPath: /var/opt/mssql
           name: db-data
       volumes:
       - name: db-data
-        emptyDir: {} 
+        emptyDir: {}
