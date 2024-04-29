@@ -18,18 +18,11 @@ io.on('connection', function (socket) {
 });
 
 //Create the config for the SQL Server connection
-var config = {
-  user:'sa',
-  password:'YourStrong@Password',
-  server:'localhost',
-  database:'Master',
-  port:1433,
-}
+var config = "Data Source=db,1433;Initial Catalog=master;User ID=sa;Password=YourStrong@Password;Encrypt=false"
 
 async.retry(
   {times: 1000, interval: 1000},
   function(callback) {
-    //Drop the done from our callback function arg
     //Also pass in the config
     sql.connect(config, (err, client) => {
       if (err) {
@@ -47,26 +40,29 @@ async.retry(
   }
 );
 
-function getVotes(client) {
-  sql.query('SELECT vote, COUNT(id) AS count FROM votes GROUP BY vote', [], (err, result) => {
-    if (err) {
-      console.error("Error performing query: " + err);
-    } else {
-      var votes = collectVotesFromResult(result);
-      io.sockets.emit("scores", JSON.stringify(votes));
-    }
+async function getVotes(client) {
+  console.log('Querying to get votes');
+  try {
+    const result = await sql.query('SELECT vote, COUNT(*) AS count FROM votes GROUP BY vote')
+    var votes = collectVotesFromResult(result);
+    io.sockets.emit("scores", JSON.stringify(votes));
+  } catch (err) {
+    console.error("Error performing query: " + err);
+  }
 
-    setTimeout(function() {getVotes(client) }, 1000);
-  });
+  //Retry for awhile before timing out.
+  setTimeout(async () => {
+    await getVotes(client) 
+  }, 1000);
 }
 
 function collectVotesFromResult(result) {
   var votes = {a: 0, b: 0, c: 0};
 
-  result.rows.forEach(function (row) {
+  result.recordset.forEach(function (row) {
     votes[row.vote] = parseInt(row.count);
   });
-
+  console.log(votes);
   return votes;
 }
 

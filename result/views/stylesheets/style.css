@@ -25,13 +25,12 @@ body {
   height: 100%;
   width: 100%;
   position: absolute;
+  display:flex;
 }
 
 #background-stats div {
   transition: width 400ms ease-in-out;
-  display: inline-block;
-  margin-bottom: -4px;
-  height: 100%;
+  flex-grow: 1;
 }
 
 #background-stats-1 {
