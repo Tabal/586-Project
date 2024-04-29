@@ -29,14 +29,23 @@ button i{
 
 button.a{
   background-color: #1aaaf8;
+  background-image: url('../images/Cat.jpg');
+  background-size: cover;
+  background-position: center;
 }
 
 button.b{
   background-color: #00cbca;
+  background-image: url('../images/Dog.jpg');
+  background-size: cover;
+  background-position: center;
 }
 
 button.c{
-    background-color: goldenrod;
+  background-color: goldenrod;
+  background-image: url('../images/Goldfish.jpg');
+  background-size: cover;
+  background-position: center;
 }
 
 #tip{
