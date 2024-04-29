@@ -15,5 +15,5 @@ spec:
         app: worker
     spec:
       containers:
-      - image: doraff/586-project:worker
+      - image: doraff/586-project-worker:latest
         name: worker

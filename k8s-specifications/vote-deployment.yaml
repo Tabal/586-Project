@@ -15,7 +15,7 @@ spec:
         app: vote
     spec:
       containers:
-      - image: doraff/586-project:vote
+      - image: doraff/586-project-vote:latest
         name: vote
         ports:
         - containerPort: 80

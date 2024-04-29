@@ -15,7 +15,7 @@ spec:
         app: result
     spec:
       containers:
-      - image: doraff/586-project:result  # Update this line with your Docker Hub username and image name
+      - image: doraff/586-project-result:latest  # Update this line with your Docker Hub username and image name
         name: result
         ports:
         - containerPort: 80
